@@ -27,7 +27,7 @@ const CONFIG = {
   
   // 通知設定
   NOTIFICATION: {
-    HR_EMAIL: 'shigeru.ishizaka@tafs.co.jp',
+    HR_EMAIL: 'shigeru.ishizaka@tafs.co.jp,ywatanabe@tafs.co.jp',
     ADMIN_EMAIL: 'shigeru.ishizaka@tafs.co.jp',
     SUBJECT_PREFIX: '【勤怠連絡】',
     

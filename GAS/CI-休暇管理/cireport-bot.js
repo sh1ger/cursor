@@ -253,6 +253,7 @@ function onMessage(e) {
 
   const userMessage = e.message.argumentText.trim();
   let replyText;
+  let replyCards = [];
 
   if (!userMessage) {
     replyText = createHelpMessage(e.user.displayName);
@@ -265,12 +266,18 @@ function onMessage(e) {
       } else {
         replyText = addToCalendar(attendanceData, e.user.displayName);
       }
+      
+      // カレンダーリンクカードを追加（報告対象の日付情報を渡す）
+      replyCards = [createCalendarLinkCard(attendanceData.dates)];
     } else {
       replyText = createFormatErrorMessage();
     }
   }
 
-  return { 'text': replyText };
+  return { 
+    'text': replyText,
+    'cards': replyCards
+  };
 }
 
 /**
@@ -696,4 +703,67 @@ function createCancellationMessage(attendanceData, successCount, errorCount, rep
   }
   
   return message;
+}
+
+/**
+ * カレンダーリンクカードを作成
+ * @param {Array} dates - 日付オブジェクトの配列
+ * @return {object} カレンダーリンクカードオブジェクト
+ */
+function createCalendarLinkCard(dates) {
+  // 日付をソートして最初と最後の日付を取得
+  const sortedDates = dates.sort((a, b) => {
+    const dateA = new Date(a.year, a.month - 1, a.day);
+    const dateB = new Date(b.year, b.month - 1, b.day);
+    return dateA - dateB;
+  });
+  
+  const firstDate = sortedDates[0];
+  const lastDate = sortedDates[sortedDates.length - 1];
+  
+  // Google Calendarの日付形式: YYYYMMDD
+  const startDate = `${firstDate.year}${String(firstDate.month).padStart(2, '0')}${String(firstDate.day).padStart(2, '0')}`;
+  const endDate = `${lastDate.year}${String(lastDate.month).padStart(2, '0')}${String(lastDate.day).padStart(2, '0')}`;
+  
+  // カレンダーURLを構築（日付範囲を指定）
+  const calendarUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(BOT_CONFIG.CALENDAR_ID)}&dates=${startDate}/${endDate}`;
+  
+  // 日付の数に応じてサブタイトルを変更
+  let subtitle;
+  if (dates.length === 1) {
+    subtitle = `対象日: ${firstDate.year}/${firstDate.month}/${firstDate.day}`;
+  } else {
+    subtitle = `対象日: ${firstDate.year}/${firstDate.month}/${firstDate.day} - ${lastDate.year}/${lastDate.month}/${lastDate.day}`;
+  }
+  
+  return {
+    'header': {
+      'title': '📅 CI部-勤怠管理カレンダー',
+      'subtitle': subtitle,
+      'imageUrl': 'https://www.gstatic.com/images/branding/product/1x/calendar_48dp.png'
+    },
+    'sections': [
+      {
+        'widgets': [
+          {
+            'keyValue': {
+              'topLabel': 'カレンダー',
+              'content': '報告対象日のカレンダーを開く',
+              'contentMultiline': true,
+              'button': {
+                'textButton': {
+                  'text': 'カレンダーを開く',
+                  'onClick': {
+                    'openLink': {
+                      'url': calendarUrl
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  };
 }
