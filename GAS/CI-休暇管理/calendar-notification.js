@@ -27,14 +27,14 @@ const CONFIG = {
   
   // 通知設定
   NOTIFICATION: {
-    HR_EMAIL: 'shigeru.ishizaka@tafs.co.jp,ywatanabe@tafs.co.jp',
+    HR_EMAIL: 'report@tafs.co.jp',
     ADMIN_EMAIL: 'shigeru.ishizaka@tafs.co.jp',
     SUBJECT_PREFIX: '【勤怠連絡】',
     
     // メール送信オプション
     EMAIL_OPTIONS: {
-      from: 'isms@tafs.co.jp',        // 実行オーナーのエイリアス
-      name: 'CI-休暇管理通知',         // 送信者名
+      from: 'cireport@tafs.co.jp',        // 実行オーナーのエイリアス
+      name: 'CI部-勤怠連絡',         // 送信者名
       // replyTo: 'hr@tafs.co.jp',     // 返信先アドレス（必要に応じて有効化）
       // noReply: true                 // 返信不可設定（必要に応じて有効化）
     }
@@ -360,16 +360,20 @@ function formatChangeSection(personChanges, changeType, sectionName) {
   const hasChanges = Object.values(personChanges).some(changes => changes[changeType].length > 0);
   
   if (!hasChanges) {
-    return 'なし';
+    return '';
   }
   
-  return Object.entries(personChanges)
+  const formattedEntries = [];
+  
+  Object.entries(personChanges)
     .filter(([person, changes]) => changes[changeType].length > 0)
-    .map(([person, changes]) => {
-      return changes[changeType].map(event => 
-        `  ${person}: ${event.type} (${event.date})`
-      ).join('\n');
-    }).join('\n');
+    .forEach(([person, changes]) => {
+      changes[changeType].forEach(event => {
+        formattedEntries.push(`    ${person}: ${event.type} (${event.date})`);
+      });
+    });
+  
+  return formattedEntries.join('\n');
 }
 
 /**
@@ -381,7 +385,6 @@ function formatChangeSection(personChanges, changeType, sectionName) {
 function sendEmail(to, subject, body) {
   try {
     const emailOptions = {
-      name: CONFIG.NOTIFICATION.SENDER_NAME,
       ...CONFIG.NOTIFICATION.EMAIL_OPTIONS
     };
     
