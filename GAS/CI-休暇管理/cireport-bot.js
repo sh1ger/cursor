@@ -251,7 +251,13 @@ function onMessage(e) {
     return;
   }
 
-  const userMessage = e.message.argumentText.trim();
+  let userMessage = ''; // デフォルト値を設定
+  if (e.message.argumentText !== undefined) {
+    userMessage = e.message.argumentText.trim();
+  } else {
+    // argumentText がない場合の処理（例: 空文字列として扱う）
+  }
+  
   let replyText;
   let replyCards = [];
 
